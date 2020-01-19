@@ -10,6 +10,12 @@ fn main() {
         quantity: u32,
         price: f32
     }
+
+    // impl std::fmt::Display for Product{
+    //     fn fmt(&self, &mut std::fmt::Formatter<'_>)->std::result::Result<(), std::fmt::Error>{
+    //         format!("Prodotto: {}, Quantitá: {}, Prezzo {} €.", self.name, self.quantity, self.price);
+    //     }
+    // }
     
     // boh
     // fn get_products()->Vec<Product>{
@@ -47,7 +53,7 @@ Scegli:
         let input = recieve_input();
         
         if input == "0"{
-            exit(1)
+            exit(0)
         }
 
         println!("\n\n\n");
@@ -106,11 +112,11 @@ Scegli:
                 // TODO
                 if product.id == id{
                     loop{
-                        println!("--------------------------------");
-                        println!("1) Per editare il prodotto      ");
-                        println!("2) Per rimuovere il prodotto    ");
-                        println!("0) Per tornare al menu anteriore");
-                        println!("--------------------------------");
+                        println!("---------------------------------");
+                        println!("(1) Per editare il prodotto      ");
+                        println!("(2) Per rimuovere il prodotto    ");
+                        println!("(0) Per tornare al menu anteriore");
+                        println!("---------------------------------");
                         
                         let input = recieve_input();
                         
