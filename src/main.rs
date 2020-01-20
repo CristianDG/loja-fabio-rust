@@ -45,6 +45,7 @@ fn main() {
     }
 
     loop{
+        // TODO testare il programma
 
         print!(
 "
@@ -196,7 +197,15 @@ Scegli:
                 let input = recieve_input();
                 
                 if input == "0"{
-                    //finire la simulazione e fare lo "scontrino"
+                    //TODO finire la simulazione e fare lo "scontrino"
+                    for i in &products_simulation{
+                        println!("{:?}",i);
+                    }
+                    println!("subtotale: {:?}",
+                             products_simulation
+                                .iter()
+                                .fold(0.0,
+                                      |acc,i|acc + (i.price * (i.quantity as f32))));
                     break;
                 }else if input == "1"{
                 
@@ -247,10 +256,53 @@ Scegli:
 
                 }else if input == "2"{
                     
-                    //TODO rimuovere un prodotto dalla lista
+                    // TODO rimuovere un prodotto dalla lista
+                    // e aggiungerlo allo stock
 
                     for item in &products_simulation{
                         println!("{:?}",item);
+                    }
+                    println!("Scegli l'id del prodotto");
+                    
+                    let id: u8 = {
+                        let raw_id = recieve_input();
+                        raw_id.parse().expect("Per favore inserisca un numero")
+                    };
+                    
+                    let mut index = 0;
+                    let mut can_remove = false;
+                    let mut remove_index = 0;
+                    for product in &mut products_simulation{
+                        if id == product.id {
+                        
+                            println!("quanti prodotti del tipo \"{}\" vuoi rimuovere alla lista?", product.name);
+                            
+                            let quantity: u32 = {
+                                let raw_value = recieve_input();
+                                raw_value.parse().expect("Per favore inserisca un numero")
+                            };
+                            
+                            if product.quantity > quantity && quantity > 0{
+                                
+                                for item in &mut products{
+                                    if id == item.id{
+                                        item.quantity += quantity;
+                                    }
+                                }
+                                
+                                product.quantity -= quantity;
+                                break;
+                            }else if product.quantity == quantity {
+                                can_remove = true;
+                                remove_index = index; 
+                            }else{
+                                println!("Quantitá eccessiva a quella nello scontrino o > 0");
+                            }
+                        }
+                        index+=1;
+                    }
+                    if can_remove{
+                        products_simulation.remove(remove_index);
                     }
 
                 }else{
