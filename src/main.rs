@@ -99,15 +99,17 @@ fn main() {
 
     macro_rules! trim_parse{
         ()=>{
+            {
+                let raw_price = recieve_input();
+                
+                // transformando String in f32 usando 'parse' per ritornare un valore o Ok(Value) o Err
+                // e unwrap per ritornare il valore dentro de Ok o smettere il programma 
+                
+                raw_price
+                    .parse()
+                    .expect("Per favore inserisca un numero")
         
-            let raw_price = recieve_input();
-            
-            // transformando String in f32 usando 'parse' per ritornare un valore o Ok(Value) o Err
-            // e unwrap per ritornare il valore dentro de Ok o smettere il programma 
-            
-            raw_price
-                .parse()
-                .expect("Per favore inserisca un numero")
+            }
         }
     }
 
