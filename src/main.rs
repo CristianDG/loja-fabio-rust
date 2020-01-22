@@ -3,13 +3,6 @@ use std::process::exit;
 
 fn main() {
     
-    enum ProductField{ 
-            Id(u8),
-            Name(String),
-            Quantity(u32),
-            Price(f32)
-    };
-
     #[derive(Debug, Clone)]
     struct Product {
         id: u8,
@@ -19,13 +12,11 @@ fn main() {
     }
 
     impl Product{
-        fn modify(&mut self, field: &ProductField) -> bool{
-            match field{
-               ProductField::Id(val)        => self.id = *val,
-               ProductField::Name(val)      => self.name = val.clone(),
-               ProductField::Quantity(val)  => self.quantity = *val,
-               ProductField::Price(val)     => self.price = *val,
-            }
+        fn modify(&mut self, new: &Product) -> bool{
+            *self = Product{
+                id: self.id,
+                ..new.clone()
+            };
             true
         }
     } 
@@ -34,7 +25,7 @@ fn main() {
     // non chiedermi cosa succede qui.
     impl std::fmt::Display for Product{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>)->std::result::Result<(), std::fmt::Error>{
-            write!(f, "Prodotto: {}, Quantitá: {}, Prezzo {} €.", self.name, self.quantity, self.price)
+            write!(f, "Id: {}, Prodotto: {}, Quantitá: {}, Prezzo {} €.", self.id, self.name, self.quantity, self.price)
         }
     }
     
@@ -61,9 +52,9 @@ fn main() {
                 .nth(0)
         }
 
-        fn modify_prod(&mut self, id: u8, field: &ProductField) -> bool{
+        fn modify_prod(&mut self, id: u8, new: &Product) -> bool{
             match self.get_prod(id){
-                Some(prod) => prod.modify(field),
+                Some(prod) => prod.modify(new),
                 None => false
             } 
         }
@@ -73,6 +64,10 @@ fn main() {
                 Some(prod) => {self.prods.remove(prod.id as usize); true},
                 None => false
             }
+        }
+
+        fn get_all(&self) -> &Vec<Product>{
+            &self.prods
         }
     }
 
@@ -165,71 +160,69 @@ Scegli:
             
             // printare i prodotti per scegliere quale editare
 
-            print_products!();
+            loop{
+                products.print_all();    
 
-            println!("-------------------------------------------------------------------");
-            println!("Scegli l'id del prodotto che vuoi editare usando il'id del prodotto");
-            println!("-------------------------------------------------------------------");
-            
-            let id: u8 = trim_parse!();
-            
-            let mut index = 0;
-            let mut remove_index = 0;
-            
-            for product in &mut products{
-                // TODO
-                if product.id == id{
-                    loop{
-                        println!("---------------------------------");
-                        println!("(1) Per editare il prodotto      ");
-                        println!("(2) Per rimuovere il prodotto    ");
-                        println!("(0) Per tornare al menu anteriore");
-                        println!("---------------------------------");
-                        
-                        let input = recieve_input();
-                        
-                        if input == "0"{
-                            break;
-                        }else if input == "1"{
-                            println!("Quale é il nuovo nome del prodotto \"{}\"?", product.name);
-                            let name = recieve_input();
+                println!("-----------------------------------------");
+                println!("Scegli l'id del prodotto che vuoi editare");
+                println!("-----------------------------------------");
+                
+                let id: u8 = trim_parse!();
+                
+                match products.get_prod(id){
+                    //TODO
+                    Some(prod)  => {
+                        loop{
+                            println!("---------------------------------");
+                            println!("(1) Per editare il prodotto      ");
+                            println!("(2) Per rimuovere il prodotto    ");
+                            println!("(0) Per tornare al menu anteriore");
+                            println!("---------------------------------");
                             
-                            println!("Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}", product.name, product.price);
-                            let price: f32 = trim_parse!();
+                            let input = recieve_input();
+                            
+                            if input == "0"{
+                                break;
+                            }else if input == "1"{
+                                println!("Quale é il nuovo nome del prodotto \"{}\"?", prod.name);
+                                let name = recieve_input();
+                                
+                                println!("Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}", prod.name, prod.price);
+                                let price: f32 = trim_parse!();
 
-                            println!("Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}", product.name, product.quantity);
-                            let quantity: u32 = trim_parse!();
-                            
-                            *product = Product{
-                                id: product.id,
-                                name,
-                                price,
-                                quantity
-                            };
-                            println!("Prodotto aggiunto!");
-                            break;
-                        }else if input=="2"{
-                            //rimuovere il prodotto
-                            
-                            remove_index = index;
+                                println!("Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}", prod.name, prod.quantity);
+                                let quantity: u32 = trim_parse!();
+                                
+                                // modify prod
+                                // uso l'& per motivi di studio, non altro
+                                products.modify_prod( prod.id, &Product{
+                                    id: prod.id,
+                                    name,
+                                    price,
+                                    quantity
+                                });
 
-                            break; 
-                        }else{
-                            continue;
+                                println!("Prodotto modificato!");
+                                break;
+                            }else if input=="2"{
+                                //rimuovere il prodotto
+                                
+                                products.remove_prod(prod.id);
+                                println!("Prodotto rimosso!");
+                                
+                                break;
+                            }else{
+                                continue;
+                            }
                         }
-                    }
 
-                }else{
-                    println!("----------------------");
-                    println!("Scegli un id esistente");
-                    println!("----------------------");
+                    },
+
+                    None => println!("Id {} non incontrato",id)
                 }
-            
-                index+=1;
+
             }
 
-            products.remove_prod(remove_index);
-            println!("Prodotto rimosso!");
 
         }else if input == "3"{
             
@@ -251,23 +244,25 @@ Scegli:
                 let input = recieve_input();
                 
                 if input == "0"{
-                    //TODO finire la simulazione e fare lo "scontrino"
+                    // finire la simulazione e fare lo "scontrino"
                     products_simulation.print_all();
 
                     println!("subtotale: {}",
                              products_simulation
+                                .get_all()
                                 .iter()
                                 .fold(0.0, |acc,i|acc + (i.price * (i.quantity as f32))));
                     
                     break;
                 }else if input == "1"{
                 
-                    print_products!();
+                    products.print_all();
                     
                     println!("Scegli l'id del prodotto");
                     
                     let id: u8 = trim_parse!();
 
+                    // TODO refactor point
                     for product in &mut products{
                         if id == product.id {
                             loop{
@@ -279,8 +274,9 @@ Scegli:
                                     
                                     
                                     match products_simulation.get_prod(id){
-                                        Some(prod)  => (),  //TODO modificare il prodotto
-                                        None        => ()   // TODO aggiungere il prodotto products_simulation.insert_prod(Product{products.get_prod(id).clone()})
+                                        Some(prod)  => (??),  //TODO modificare il prodotto
+                                        // TODO aggiungere il prodotto products_simulation.insert_prod(Product{products.get_prod(id).clone()})
+                                        None        => (??)
                                     }
 
                                     product.quantity -= quantity;
@@ -303,6 +299,7 @@ Scegli:
                     
                     let id: u8 = trim_parse!();
                     
+                    // TODO refactor point
                     let mut index = 0;
                     let mut can_remove = false;
                     let mut remove_index = 0;
@@ -315,6 +312,7 @@ Scegli:
                             
                             if product.quantity > quantity && quantity > 0{
                                 
+                                // TODO refactor point
                                 for item in &mut products{
                                     if id == item.id{
                                         item.quantity += quantity;
@@ -343,7 +341,7 @@ Scegli:
 
         }else if input == "4"{
 
-            print_products!();
+            products.print_all();
         
         }else{
            continue 
