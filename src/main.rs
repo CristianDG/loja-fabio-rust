@@ -54,15 +54,19 @@ fn main() {
             self.prods.iter().filter(|p| p.id == id).nth(0)
         }
 
+        fn get_prod_mut(&mut self, id: u8) -> Option<&mut Product>{
+            self.prods.iter_mut().filter(|p| p.id == id).nth(0)
+        }
+
         fn modify_prod(&mut self, id: u8, new: &Product) -> bool {
-            match self.get_prod(id) {
+            match self.get_prod_mut(id) {
                 Some(prod) => prod.modify(new),
                 None => false,
             }
         }
 
         fn remove_prod(&mut self, id: u8) -> bool {
-            match self.get_prod(id) {
+            match self.get_prod_mut(id) {
                 Some(prod) => {
                     self.prods.remove(prod.id as usize);
                     true
@@ -292,10 +296,10 @@ Scegli:
                                                 quantity,
                                                 ..stock_product.clone()
                                             });
-
                                         }
                                     }
-                                    stock_product.modify_quantity(stock_product.quantity - quantity);
+                                    stock_product
+                                        .modify_quantity(stock_product.quantity - quantity);
                                     break;
                                 } else {
                                     println!("Quantitá eccessiva a quella nello stock");
@@ -326,7 +330,6 @@ Scegli:
                                 let quantity: u32 = trim_parse!();
 
                                 if cart_product.quantity <= quantity && quantity >= 0 {
-                                    
                                     let mut prod_ref = products.get_prod(id).unwrap();
                                     prod_ref.modify_quantity(prod_ref.quantity - quantity);
 
