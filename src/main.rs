@@ -50,29 +50,16 @@ fn main() {
             self.next_id += 1;
         }
 
-        fn get_prod(&self, id: u8) -> Option<&Product> {
-            self.prods.iter().filter(|p| p.id == id).nth(0)
-        }
-
-        fn get_prod_mut(&mut self, id: u8) -> Option<&mut Product>{
+        fn get_prod_mut(&mut self, id: u8) -> Option<&mut Product> {
             self.prods.iter_mut().filter(|p| p.id == id).nth(0)
         }
 
-        fn modify_prod(&mut self, id: u8, new: &Product) -> bool {
-            match self.get_prod_mut(id) {
-                Some(prod) => prod.modify(new),
-                None => false,
-            }
+        fn get_index(&self, id: u8) -> Option<usize> {
+            self.prods.iter().position(|p| p.id == id)
         }
 
-        fn remove_prod(&mut self, id: u8) -> bool {
-            match self.get_prod_mut(id) {
-                Some(prod) => {
-                    self.prods.remove(prod.id as usize);
-                    true
-                }
-                None => false,
-            }
+        fn remove_prod(&mut self, id: u8) {
+            self.prods.remove(self.get_index(id).unwrap());
         }
 
         fn get_all(&self) -> &Vec<Product> {
@@ -179,7 +166,8 @@ Scegli:
 
                 let id: u8 = trim_parse!();
 
-                match products.get_prod(id) {
+                let mut can_remove = false;
+                match products.get_prod_mut(id) {
                     //TODO
                     Some(prod) => {
                         loop {
@@ -211,22 +199,18 @@ Scegli:
 
                                 // modify prod
                                 // uso l'& per motivi di studio, non altro
-                                products.modify_prod(
-                                    prod.id,
-                                    &Product {
-                                        id: prod.id,
-                                        name,
-                                        price,
-                                        quantity,
-                                    },
-                                );
+                                prod.modify(&Product {
+                                    id: prod.id,
+                                    name,
+                                    price,
+                                    quantity,
+                                });
 
                                 println!("Prodotto modificato!");
                                 break;
                             } else if input == "2" {
                                 //rimuovere il prodotto
-
-                                products.remove_prod(prod.id);
+                                can_remove = true;
                                 println!("Prodotto rimosso!");
 
                                 break;
@@ -237,6 +221,9 @@ Scegli:
                     }
 
                     None => println!("Id {} non incontrato", id),
+                }
+                if can_remove {
+                    products.remove_prod(id);
                 }
             }
         } else if input == "3" {
@@ -277,7 +264,7 @@ Scegli:
                     let id: u8 = trim_parse!();
 
                     loop {
-                        match products.get_prod(id) {
+                        match products.get_prod_mut(id) {
                             Some(stock_product) => {
                                 println!(
                                     "quanti prodotti del tipo \"{}\" vuoi aggiungere alla lista?",
@@ -287,7 +274,7 @@ Scegli:
                                 let quantity: u32 = trim_parse!();
 
                                 if stock_product.quantity >= quantity && quantity > 0 {
-                                    match products_simulation.get_prod(id) {
+                                    match products_simulation.get_prod_mut(id) {
                                         Some(prod_ref) => {
                                             prod_ref.modify_quantity(prod_ref.quantity + quantity)
                                         }
@@ -319,8 +306,9 @@ Scegli:
                     let id: u8 = trim_parse!();
 
                     // TODO refactor point
+
                     loop {
-                        match products_simulation.get_prod(id) {
+                        match products_simulation.get_prod_mut(id) {
                             Some(cart_product) => {
                                 println!(
                                     "quanti prodotti del tipo \"{}\" vuoi rimuovere dalla lista?",
@@ -329,8 +317,8 @@ Scegli:
 
                                 let quantity: u32 = trim_parse!();
 
-                                if cart_product.quantity <= quantity && quantity >= 0 {
-                                    let mut prod_ref = products.get_prod(id).unwrap();
+                                if cart_product.quantity <= quantity {
+                                    let prod_ref = products.get_prod_mut(id).unwrap();
                                     prod_ref.modify_quantity(prod_ref.quantity - quantity);
 
                                     break;
