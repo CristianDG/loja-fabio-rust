@@ -50,7 +50,7 @@ fn main() {
             self.next_id += 1;
         }
 
-        fn get_prod_mut(&mut self, id: u8) -> Option<&mut Product> {
+        fn get_prod(&mut self, id: u8) -> Option<&mut Product> {
             self.prods.iter_mut().filter(|p| p.id == id).nth(0)
         }
 
@@ -167,7 +167,7 @@ Scegli:
                 let id: u8 = trim_parse!();
 
                 let mut can_remove = false;
-                match products.get_prod_mut(id) {
+                match products.get_prod(id) {
                     //TODO
                     Some(prod) => {
                         loop {
@@ -264,7 +264,7 @@ Scegli:
                     let id: u8 = trim_parse!();
 
                     loop {
-                        match products.get_prod_mut(id) {
+                        match products.get_prod(id) {
                             Some(stock_product) => {
                                 println!(
                                     "quanti prodotti del tipo \"{}\" vuoi aggiungere alla lista?",
@@ -274,7 +274,7 @@ Scegli:
                                 let quantity: u32 = trim_parse!();
 
                                 if stock_product.quantity >= quantity && quantity > 0 {
-                                    match products_simulation.get_prod_mut(id) {
+                                    match products_simulation.get_prod(id) {
                                         Some(prod_ref) => {
                                             prod_ref.modify_quantity(prod_ref.quantity + quantity)
                                         }
@@ -308,7 +308,7 @@ Scegli:
                     // TODO refactor point
 
                     loop {
-                        match products_simulation.get_prod_mut(id) {
+                        match products_simulation.get_prod(id) {
                             Some(cart_product) => {
                                 println!(
                                     "quanti prodotti del tipo \"{}\" vuoi rimuovere dalla lista?",
@@ -318,7 +318,7 @@ Scegli:
                                 let quantity: u32 = trim_parse!();
 
                                 if cart_product.quantity <= quantity {
-                                    let prod_ref = products.get_prod_mut(id).unwrap();
+                                    let prod_ref = products.get_prod(id).unwrap();
                                     prod_ref.modify_quantity(prod_ref.quantity - quantity);
 
                                     break;
