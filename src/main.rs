@@ -10,47 +10,103 @@ fn main() {
         price: f32,
     }
 
-    // TODO implementare Display
-    // impl std::fmt::Display for Product{
-    //     fn fmt(&self, &mut std::fmt::Formatter<'_>)->std::result::Result<(), std::fmt::Error>{
-    //         format!("Prodotto: {}, Quantitá: {}, Prezzo {} €.", self.name, self.quantity, self.price);
-    //     }
-    // }
+    impl Product {
+        fn modify(&mut self, new: &Product) -> bool {
+            *self = Product {
+                id: self.id,
+                ..new.clone()
+            };
+            true
+        }
 
-    // boh
-    // fn get_products()->Vec<Product>{
-    //     products
-    // }
-    // let mut products: Vec<Product> = get_products();
-
-    let mut next_id: u8 = 3;
-    let mut products = vec![
-        Product {
-            id: 1,
-            name: String::from("Penna"),
-            quantity: 20,
-            price: 1.0,
-        },
-        Product {
-            id: 2,
-            name: String::from("Notebook"),
-            quantity: 5,
-            price: 250.0,
-        },
-    ];
-    macro_rules! print_products {
-        () => {
-            let prods = &products;
-            for prod in prods {
-                println!("{:?}", prod);
-            }
-        };
+        fn modify_quantity(&mut self, quantity: u32) {
+            self.quantity = quantity;
+        }
     }
+
+    // non chiedermi cosa succede qui.
+    impl std::fmt::Display for Product {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+            write!(
+                f,
+                "Id: {}, Prodotto: {}, Quantitá: {}, Prezzo {} €.",
+                self.id, self.name, self.quantity, self.price
+            )
+        }
+    }
+
+    struct ProductList {
+        prods: Vec<Product>,
+        next_id: u8,
+    }
+
+    impl ProductList {
+        fn print_all(&self) {
+            self.prods.iter().for_each(|p| println!("{}", p));
+        }
+
+        fn insert_prod(&mut self, prod: Product) {
+            self.prods.push(prod);
+            self.next_id += 1;
+        }
+
+        fn get_prod(&mut self, id: u8) -> Option<&mut Product> {
+            self.prods.iter_mut().filter(|p| p.id == id).nth(0)
+        }
+
+        fn get_index(&self, id: u8) -> Option<usize> {
+            self.prods.iter().position(|p| p.id == id)
+        }
+
+        fn remove_prod(&mut self, id: u8) {
+            self.prods.remove(self.get_index(id).unwrap());
+        }
+
+        fn get_all(&self) -> &Vec<Product> {
+            &self.prods
+        }
+    }
+
+    // TODO connessione con banco di dati
+    fn get_products() -> Vec<Product> {
+        vec![
+            Product {
+                id: 1,
+                name: String::from("Penna"),
+                quantity: 20,
+                price: 1.0,
+            },
+            Product {
+                id: 2,
+                name: String::from("Notebook"),
+                quantity: 5,
+                price: 250.0,
+            },
+        ]
+    }
+
+    let mut products = ProductList {
+        prods: get_products(),
+        next_id: get_products().last().unwrap().id,
+    };
 
     fn recieve_input() -> String {
         let mut raw_string = String::new();
-        io::stdin().read_line(&mut raw_string).expect("Error");
+        io::stdin()
+            .read_line(&mut raw_string)
+            .expect("Error reading string stream");
         raw_string.trim().to_string()
+    }
+
+    macro_rules! trim_parse {
+        () => {{
+            let raw_price = recieve_input();
+
+            // transformando String in f32 usando 'parse' per ritornare un valore o Ok(Value) o Err
+            // e unwrap per ritornare il valore dentro de Ok o smettere il programma
+
+            raw_price.parse().expect("Per favore inserisca un numero")
+        }};
     }
 
     loop {
@@ -85,122 +141,96 @@ Scegli:
             let name = recieve_input();
 
             println!("Prezzo del prodotto");
-
-            let price: f32 = {
-                let raw_price = recieve_input();
-
-                // transformando String in f32 usando 'parse' per ritornare un valore o Ok(Value) o Err
-                // e unwrap per ritornare il valore dentro de Ok o smettere il programma
-
-                raw_price.parse().expect("Per favore inserisca un numero")
-            };
+            let price: f32 = trim_parse!();
 
             println!("Quantitá del prodotto");
 
-            let quantity: u32 = {
-                let raw_quantity = recieve_input();
-                raw_quantity
-                    .parse()
-                    .expect("Per favore inserisca un numero")
-            };
+            let quantity: u32 = trim_parse!();
 
-            products.push(Product {
-                id: next_id,
+            products.insert_prod(Product {
+                id: products.next_id,
                 name,
                 quantity,
                 price,
             });
-            next_id += 1;
         } else if input == "2" {
             // printare i prodotti per scegliere quale editare
 
-            print_products!();
+            loop {
+                products.print_all();
+                println!("-----------------------------------------");
+                println!("Scegli l'id del prodotto che vuoi editare");
+                println!("-----------------------------------------");
 
-            println!("-------------------------------------------------------------------");
-            println!("Scegli l'id del prodotto che vuoi editare usando il'id del prodotto");
-            println!("-------------------------------------------------------------------");
+                let id: u8 = trim_parse!();
 
-            let id: u8 = {
-                let raw_id = recieve_input();
-                raw_id.parse().expect("Per favore inserisca un numero")
-            };
+                let mut can_remove = false;
+                match products.get_prod(id) {
+                    //TODO
+                    Some(prod) => {
+                        loop {
+                            println!("---------------------------------");
+                            println!("(1) Per editare il prodotto      ");
+                            println!("(2) Per rimuovere il prodotto    ");
+                            println!("(0) Per tornare al menu anteriore");
+                            println!("---------------------------------");
 
-            let mut index = 0;
-            let mut remove_index = 0;
+                            let input = recieve_input();
 
-            for product in &mut products {
-                // TODO
-                if product.id == id {
-                    loop {
-                        println!("---------------------------------");
-                        println!("(1) Per editare il prodotto      ");
-                        println!("(2) Per rimuovere il prodotto    ");
-                        println!("(0) Per tornare al menu anteriore");
-                        println!("---------------------------------");
+                            if input == "0" {
+                                break;
+                            } else if input == "1" {
+                                println!("Quale é il nuovo nome del prodotto \"{}\"?", prod.name);
+                                let name = recieve_input();
 
-                        let input = recieve_input();
+                                println!(
+                                    "Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}",
+                                    prod.name, prod.price
+                                );
+                                let price: f32 = trim_parse!();
 
-                        if input == "0" {
-                            break;
-                        } else if input == "1" {
-                            println!("Quale é il nuovo nome del prodotto \"{}\"?", product.name);
-                            let name = recieve_input();
+                                println!(
+                                    "Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}",
+                                    prod.name, prod.quantity
+                                );
+                                let quantity: u32 = trim_parse!();
 
-                            println!(
-                                "Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}",
-                                product.name, product.price
-                            );
-                            let price: f32 = {
-                                let raw_price = recieve_input();
-                                raw_price.parse().expect("Per favore inserisca un numero")
-                            };
+                                // modify prod
+                                // uso l'& per motivi di studio, non altro
+                                prod.modify(&Product {
+                                    id: prod.id,
+                                    name,
+                                    price,
+                                    quantity,
+                                });
 
-                            println!(
-                                "Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}",
-                                product.name, product.quantity
-                            );
-                            let quantity: u32 = {
-                                let raw_quantity = recieve_input();
-                                raw_quantity
-                                    .parse()
-                                    .expect("Per favore inserisca un numero")
-                            };
+                                println!("Prodotto modificato!");
+                                break;
+                            } else if input == "2" {
+                                //rimuovere il prodotto
+                                can_remove = true;
+                                println!("Prodotto rimosso!");
 
-                            *product = Product {
-                                id: product.id,
-                                name,
-                                price,
-                                quantity,
-                            };
-                            println!("Prodotto aggiunto!");
-                            break;
-                        } else if input == "2" {
-                            //rimuovere il prodotto
-
-                            remove_index = index;
-
-                            break;
-                        } else {
-                            continue;
+                                break;
+                            } else {
+                                continue;
+                            }
                         }
                     }
-                } else {
-                    println!("----------------------");
-                    println!("Scegli un id esistente");
-                    println!("----------------------");
+
+                    None => println!("Id {} non incontrato", id),
                 }
-
-                index += 1;
+                if can_remove {
+                    products.remove_prod(id);
+                }
             }
-
-            products.remove(remove_index);
-            println!("Prodotto rimosso!");
         } else if input == "3" {
-            //TODO
-            // fare la simulazione
-
-            let mut products_simulation: Vec<Product> = vec![];
-
+            let mut products_simulation = ProductList {
+                prods: vec![],
+                // TODO non só cosa fare qua
+                // valore inutile in questa variabile
+                next_id: 0,
+            };
             loop {
                 println!("-----------------------------------------------------");
                 println!("(1) Per aggiungere un prodotto");
@@ -211,120 +241,97 @@ Scegli:
                 let input = recieve_input();
 
                 if input == "0" {
-                    //TODO finire la simulazione e fare lo "scontrino"
-                    for i in &products_simulation {
-                        println!("{:?}", i);
-                    }
+                   // finire la simulazione e fare lo "scontrino"
+                    products_simulation.print_all();
+
                     println!(
-                        "subtotale: {:?}",
+                        "subtotale: {}",
                         products_simulation
+                            .get_all()
                             .iter()
                             .fold(0.0, |acc, i| acc + (i.price * (i.quantity as f32)))
                     );
+
                     break;
                 } else if input == "1" {
-                    print_products!();
+                    products.print_all();
 
                     println!("Scegli l'id del prodotto");
 
-                    let id: u8 = {
-                        let raw_id = recieve_input();
-                        raw_id.parse().expect("Per favore inserisca un numero")
-                    };
+                    let id: u8 = trim_parse!();
 
-                    for product in &mut products {
-                        if id == product.id {
-                            loop {
+                    loop {
+                        match products.get_prod(id) {
+                            Some(stock_product) => {
                                 println!(
                                     "quanti prodotti del tipo \"{}\" vuoi aggiungere alla lista?",
-                                    product.name
+                                    stock_product.name
                                 );
 
-                                let quantity: u32 = {
-                                    let raw_value = recieve_input();
-                                    raw_value.parse().expect("Per favore inserisca un numero")
-                                };
+                                let quantity: u32 = trim_parse!();
 
-                                if product.quantity >= quantity && quantity > 0 {
-                                    let mut already_exist = false;
-                                    for item in &mut products_simulation {
-                                        if id == item.id {
-                                            already_exist = true;
-                                            item.quantity += quantity;
+                                if stock_product.quantity >= quantity && quantity > 0 {
+                                    match products_simulation.get_prod(id) {
+                                        Some(prod_ref) => {
+                                            prod_ref.modify_quantity(prod_ref.quantity + quantity)
+                                        }
+                                        None => {
+                                            products_simulation.insert_prod(Product {
+                                                quantity,
+                                                ..stock_product.clone()
+                                            });
                                         }
                                     }
-
-                                    if !already_exist {
-                                        products_simulation.push(Product {
-                                            quantity,
-                                            ..product.clone()
-                                        });
-                                    }
-
-                                    product.quantity -= quantity;
+                                    stock_product
+                                        .modify_quantity(stock_product.quantity - quantity);
                                     break;
                                 } else {
                                     println!("Quantitá eccessiva a quella nello stock");
                                 }
                             }
-                        }
+                            None => println!("Prodotto con Id: {} non incontrato", id),
+                        };
                     }
                 } else if input == "2" {
                     // TODO rimuovere un prodotto dalla lista
                     // e aggiungerlo allo stock
 
-                    for item in &products_simulation {
-                        println!("{:?}", item);
-                    }
+                    products_simulation.print_all();
+
                     println!("Scegli l'id del prodotto");
 
-                    let id: u8 = {
-                        let raw_id = recieve_input();
-                        raw_id.parse().expect("Per favore inserisca un numero")
-                    };
+                    let id: u8 = trim_parse!();
 
-                    let mut index = 0;
-                    let mut can_remove = false;
-                    let mut remove_index = 0;
-                    for product in &mut products_simulation {
-                        if id == product.id {
-                            println!(
-                                "quanti prodotti del tipo \"{}\" vuoi rimuovere alla lista?",
-                                product.name
-                            );
+                    // TODO refactor point
 
-                            let quantity: u32 = {
-                                let raw_value = recieve_input();
-                                raw_value.parse().expect("Per favore inserisca un numero")
-                            };
+                    loop {
+                        match products_simulation.get_prod(id) {
+                            Some(cart_product) => {
+                                println!(
+                                    "quanti prodotti del tipo \"{}\" vuoi rimuovere dalla lista?",
+                                    cart_product.name
+                                );
 
-                            if product.quantity > quantity && quantity > 0 {
-                                for item in &mut products {
-                                    if id == item.id {
-                                        item.quantity += quantity;
-                                    }
+                                let quantity: u32 = trim_parse!();
+
+                                if cart_product.quantity <= quantity {
+                                    let prod_ref = products.get_prod(id).unwrap();
+                                    prod_ref.modify_quantity(prod_ref.quantity - quantity);
+
+                                    break;
+                                } else {
+                                    println!("Quantitá eccessiva a quella nella simulazione");
                                 }
-
-                                product.quantity -= quantity;
-                                break;
-                            } else if product.quantity == quantity {
-                                can_remove = true;
-                                remove_index = index;
-                            } else {
-                                println!("Quantitá eccessiva a quella nello scontrino o > 0");
                             }
-                        }
-                        index += 1;
-                    }
-                    if can_remove {
-                        products_simulation.remove(remove_index);
+                            None => println!("Prodotto con Id: {} non incontrato", id),
+                        };
                     }
                 } else {
                     continue;
                 }
             }
         } else if input == "4" {
-            print_products!();
+            products.print_all();
         } else {
             continue;
         }
