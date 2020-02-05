@@ -11,12 +11,11 @@ fn main() {
     }
 
     impl Product {
-        fn modify(&mut self, new: &Product) -> bool {
+        fn modify(&mut self, new: &Product) {
             *self = Product {
                 id: self.id,
                 ..new.clone()
             };
-            true
         }
 
         fn modify_quantity(&mut self, quantity: u32) {
