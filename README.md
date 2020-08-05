@@ -1,5 +1,7 @@
 # loja-fabio-rust
 
+Learning Rust
+
 ## Scope of the project
 This is a project that my professor (Fábio) told me for learning a new programming language.
 
