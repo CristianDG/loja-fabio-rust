@@ -161,69 +161,67 @@ Scegli:
 
                 let id: u8 = trim_parse!();
 
-                //TODO: tirar essa flag
+                //TODO: refactor point
                 let mut can_remove = false;
 
-                //let mut prod = match products.product_at_mut(id) { }
-                match products.product_at_mut(id) {
-                    Some(prod) => {
-                        loop {
-                            println!("---------------------------------");
-                            println!("(1) Per editare il prodotto      ");
-                            println!("(2) Per rimuovere il prodotto    ");
-                            println!("(0) Per tornare al menu anteriore");
-                            println!("---------------------------------");
+                if let Some(prod) = products.product_at_mut(id){
+                    loop {
+                        println!("---------------------------------");
+                        println!("(1) Per editare il prodotto      ");
+                        println!("(2) Per rimuovere il prodotto    ");
+                        println!("(0) Per tornare al menu anteriore");
+                        println!("---------------------------------");
 
-                            let input = recieve_input();
+                        let input = recieve_input();
 
-                            if input == "0" {
-                                break;
-                            } else if input == "1" {
-                                println!("Quale é il nuovo nome del prodotto \"{}\"?", prod.name);
-                                let name = recieve_input();
+                        if input == "0" {
+                            break;
+                        } else if input == "1" {
+                            println!("Quale é il nuovo nome del prodotto \"{}\"?", prod.name);
+                            let name = recieve_input();
 
-                                println!(
-                                    "Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}",
-                                    prod.name, prod.price
-                                );
-                                let price: f32 = trim_parse!();
+                            println!(
+                                "Quale é il nuovo prezzo del prodotto \"{}\"? attuale: {}",
+                                prod.name, prod.price
+                            );
+                            let price: f32 = trim_parse!();
 
-                                println!(
-                                    "Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}",
-                                    prod.name, prod.quantity
-                                );
-                                let quantity: u32 = trim_parse!();
+                            println!(
+                                "Quale é la nuova quantitá del prodotto \"{}\"? attuale: {}",
+                                prod.name, prod.quantity
+                            );
+                            let quantity: u32 = trim_parse!();
 
-                                // modify prod
-                                // uso l'& per motivi di studio, non altro
-                                prod.modify(Product {
-                                    id: prod.id,
-                                    name,
-                                    price,
-                                    quantity,
-                                });
+                            // modify prod
+                            // uso l'& per motivi di studio, non altro
+                            prod.modify(Product {
+                                id: prod.id,
+                                name,
+                                price,
+                                quantity,
+                            });
 
-                                println!("Prodotto modificato!");
-                                break;
-                            } else if input == "2" {
-                                //rimuovere il prodotto
-                                can_remove = true;
+                            println!("Prodotto modificato!");
+                            break;
+                        } else if input == "2" {
+                            //rimuovere il prodotto
+                            can_remove = true;
 
-                                break;
-                            } else {
-                                continue;
-                            }
+                            break;
+                        } else {
+                            continue;
                         }
                     }
-                    None => {
-                        println!("Id {} non incontrato", id);
-                    }
+                }else{
+                    println!("Id {} non incontrato", id);
                 }
+
                 if can_remove {
                     products.remove(id);
                     println!("Prodotto con Id:{} rimosso!", id);
                 }
             }
+
         } else if input == "3" {
             let mut products_simulation = ProductList {
                 prods: vec![],
